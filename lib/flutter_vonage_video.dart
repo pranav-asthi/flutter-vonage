@@ -43,9 +43,9 @@ class FlutterVonageVideo {
     }
   }
 
-  static Future<String> publishStream(String name) async {
+  static Future<String> publishStream(String name, int viewId) async {
     try {
-      return await _channel.invokeMethod('publishStream', { "name": name });
+      return await _channel.invokeMethod('publishStream', { "name": name, "viewId": viewId });
     } on PlatformException {
       return "error";
     }

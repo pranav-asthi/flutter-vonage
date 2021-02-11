@@ -4,21 +4,17 @@
 
 ### Android
 
-- Update `android/app/build.gradle`
+Nothing to do!
+
+### iOS
+
+- Update `Info.plist`
 
 ```
-android {
-  ...
-  compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
-  }
-  ...
-}
-
-dependencies {
-  ...
-  implementation 'com.opentok.android:opentok-android-sdk:2.18.1'
-  ...
-}
+<key>NSMicrophoneUsageDescription</key>
+<string>Mirophone used for video</string>
+<key>NSCameraUsageDescription</key>
+<string>Camera used for video</string>
 ```
+
+- Update all iOS deployment targets (including for ALL pods) to `10.0`
