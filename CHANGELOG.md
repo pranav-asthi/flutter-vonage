@@ -1,3 +1,3 @@
 ## 0.0.1
 
-* TODO: Describe initial release.
+- First versions of Android & iOS publishing (web & subscribing coming).

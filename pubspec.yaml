@@ -1,8 +1,8 @@
 name: flutter_vonage_video
-description: A new flutter plugin project.
-version: 0.0.1
-author:
+description: Flutter Vonage Video (Tokbox / Opentok) API for publishing and subscribing to video and audio streams.
+version: 0.0.3
 homepage:
+repository: https://github.com/presencelearning/flutter-vonage-video
 
 environment:
   sdk: ">=2.7.0 <3.0.0"
@@ -14,7 +14,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
 
-  permission_handler: 5.0.1
+  permission_handler: 6.1.1
 
 dev_dependencies:
   flutter_test:
