@@ -79,4 +79,12 @@ class FlutterVonageVideo {
     }
     return false;
   }
+
+  static Future<String> subscribingStream(String name, int viewId) async {
+    try {
+      return await _channel.invokeMethod('subscribingStream', { "name": name, "viewId": viewId });
+    } on PlatformException {
+      return "error";
+    }
+  }
 }

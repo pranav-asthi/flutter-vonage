@@ -1,4 +1,7 @@
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'dart:async';
 
 import 'package:flutter/services.dart';
@@ -27,7 +30,15 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    initPlatformState();
+    _startAll();
+  }
+
+  Future<void> _startAll() async{
+    await _initSession();
+    // await Future.delayed(Duration(seconds: 2));
+    // await _publishStream();
+    // await Future.delayed(Duration(seconds: 2));
+    // await _subscriberStream();
   }
 
   Future<void> _initSession() async {
@@ -36,6 +47,7 @@ class _MyAppState extends State<MyApp> {
       _sessionInited = true;
       _isPublishing = false;
     });
+    print(ret);
   }
 
   Future<void> _publishStream() async {
@@ -52,8 +64,50 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  Future<void> _subscriberStream() async {
+    String ret = await FlutterVonageVideo.subscribingStream("a", 1);
+  }
+
   Widget _buildPublisher(var context) {
     String viewType = 'flutter-vonage-video-publisher';
+    Map<String, dynamic> creationParams = <String, dynamic> {};
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      return PlatformViewLink(
+        viewType: viewType,
+        surfaceFactory: (BuildContext context, PlatformViewController controller) {
+          return AndroidViewSurface(
+            controller: controller,
+            gestureRecognizers: const <Factory<OneSequenceGestureRecognizer>>{},
+            hitTestBehavior: PlatformViewHitTestBehavior.opaque,
+          );
+        },
+        onCreatePlatformView: (PlatformViewCreationParams params) {
+          return PlatformViewsService.initSurfaceAndroidView(
+            id: params.id,
+            viewType: viewType,
+            layoutDirection: TextDirection.ltr,
+            creationParams: creationParams,
+            creationParamsCodec: StandardMessageCodec(),
+          )
+          ..addOnPlatformViewCreatedListener(params.onPlatformViewCreated)
+          ..create();
+        },
+      );
+    } else if(defaultTargetPlatform == TargetPlatform.iOS) {
+      return UiKitView(
+        viewType: viewType,
+        layoutDirection: TextDirection.ltr,
+        creationParams: creationParams,
+        creationParamsCodec: const StandardMessageCodec(),
+        onPlatformViewCreated: (int id) {
+          _pluginViewId = id;
+        },
+      );
+    }
+  }
+
+   Widget _buildSubscriber(var context) {
+    String viewType = 'flutter-vonage-video-subscriber';
     Map<String, dynamic> creationParams = <String, dynamic> {};
     if (defaultTargetPlatform == TargetPlatform.android) {
       return PlatformViewLink(
@@ -118,6 +172,13 @@ class _MyAppState extends State<MyApp> {
         onPressed: _unpublishStream,
       );
     }
+    Widget _subscribingButton = SizedBox.shrink();
+    if (true) {
+      _subscribingButton = ElevatedButton(
+        child: Text('Subscriber Stream'),
+        onPressed: _subscriberStream,
+      );
+    }
 
     return MaterialApp(
       home: Scaffold(
@@ -128,10 +189,27 @@ class _MyAppState extends State<MyApp> {
           children: <Widget> [
             _buttonPublish,
             _buttonUnpublish,
+            _subscribingButton,
             Container(
               width: 600,
               height: 600,
-              child: _buildPublisher(context),
+              child: Stack(
+                children: [
+                  Container(
+                    width: 600,
+                    height: 600,
+                    child: _buildSubscriber(context),
+                  ),
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: Container(
+                      height: 100,
+                      width: 100,
+                      child: _buildPublisher(context),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ]
         ),

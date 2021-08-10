@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.vonagevideo.flutter_vonage_video_example">
+    package="com.example.test_vonage">
    <application
-        android:label="flutter_vonage_video_example"
+        android:label="test_vonage"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"

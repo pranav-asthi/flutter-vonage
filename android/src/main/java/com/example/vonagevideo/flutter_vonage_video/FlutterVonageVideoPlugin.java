@@ -12,27 +12,22 @@ import io.flutter.plugin.platform.PlatformView;
 
 import io.flutter.plugin.common.BinaryMessenger;
 
-import android.content.ContextWrapper;
-import android.content.Intent;
-import android.content.IntentFilter;
 // import android.os.BatteryManager;
 // import android.os.Build.VERSION;
 // import android.os.Build.VERSION_CODES;
-import android.os.Bundle;
 
 import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.opentok.android.Publisher;
 import com.opentok.android.PublisherKit;
 import com.opentok.android.Subscriber;
-import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.OpentokError;
-import com.opentok.android.SubscriberKit;
 // import com.tokbox.android.tutorials.basicvideochat.R;
 import android.util.Log;
-import android.Manifest;
 
-import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 // import pub.devrel.easypermissions.AfterPermissionGranted;
 // import pub.devrel.easypermissions.AppSettingsDialog;
@@ -49,8 +44,11 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
   /// when the Flutter Engine is detached from the Activity
   private MethodChannel channel;
   private NativeViewFactory nativeView;
+  private NativeViewFactory native2View;
 
   private Context mContext;
+  private ExecutorService executor
+          = Executors.newSingleThreadExecutor();
 
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
@@ -60,21 +58,15 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
     mContext = flutterPluginBinding.getApplicationContext();
 
     nativeView = new NativeViewFactory();
+    native2View = new NativeViewFactory();
     flutterPluginBinding.getPlatformViewRegistry()
       .registerViewFactory("flutter-vonage-video-publisher", nativeView);
+    flutterPluginBinding.getPlatformViewRegistry()
+            .registerViewFactory("flutter-vonage-video-subscriber", native2View);
   }
 
   @Override
   public void onMethodCall(@NonNull MethodCall call, @NonNull Result result) {
-    // if (call.method.equals("getPlatformVersion")) {
-    //   result.success("Android " + android.os.Build.VERSION.RELEASE);
-    // } else if (call.method.equals("getBatteryLevel")) {
-    //   int batteryLevel = getBatteryLevel();
-    //   if (batteryLevel != -1) {
-    //     result.success(batteryLevel);
-    //   } else {
-    //     result.error("UNAVAILABLE", "Battery level not available.", null);
-    //   }
     if (call.method.equals("initSession")) {
       result.success(initSession(call.argument("sessionId"), call.argument("token"), call.argument("apiKey")));
     } else if (call.method.equals("endSession")) {
@@ -83,6 +75,8 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
       result.success(publishStream(call.argument("name")));
     } else if (call.method.equals("unpublishStream")) {
       result.success(unpublishStream());
+    } else if (call.method.equals("subscribingStream")) {
+      result.success(subscribingStream());
     } else {
       result.notImplemented();
     }
@@ -93,21 +87,6 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
     channel.setMethodCallHandler(null);
   }
 
-//   private int getBatteryLevel() {
-//     int batteryLevel = -1;
-//     if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
-// //      BatteryManager batteryManager = (BatteryManager) getSystemService(BATTERY_SERVICE);
-// //      batteryLevel = batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-//       batteryLevel = BatteryManager.BATTERY_PROPERTY_CAPACITY;
-// //    } else {
-// //      Intent intent = new ContextWrapper(getApplicationContext()).
-// //              registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
-// //      batteryLevel = (intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) * 100) /
-// //              intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-//     }
-
-//     return batteryLevel;
-//   }
 
 
   private static final String LOG_TAG = "flutter-vonage-video-log-tag";
@@ -116,18 +95,23 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
 
   private Session mSession;
   private Publisher mPublisher;
+  private Subscriber mSubscriber;
+
 
   private String _sessionId;
   private String _token;
   private String _apiKey;
 
-  private String initSession(String sessionId, String token, String apiKey) {
+  private String initSession(String sessionId, String token, String apiKey){
     _sessionId = sessionId;
     _token = token;
     _apiKey = apiKey;
-    initializeSession();
+    System.out.println("Esperando");
+    Future x = initializeSession();
+    while(x.isDone()){};
+    System.out.println("Session realizada");
     // requestPermissions();
-    return "";
+    return "top";
   }
 
   private String publishStream(String name) {
@@ -152,50 +136,20 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
     return "";
   }
 
-  // @Override
-  // public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-  //   super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-  //   EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, mContext);
-  // }
 
-  // @AfterPermissionGranted(RC_VIDEO_APP_PERM)
-  // private void requestPermissions() {
-  //   String[] perms = { Manifest.permission.INTERNET, Manifest.permission.CAMERA, Manifest.permission.RECORD_AUDIO };
-  //   if (EasyPermissions.hasPermissions(mContext, perms)) {
-  //     // initialize view objects from your layout
-
-
-  //     // initialize and connect to the session
-  //     initializeSession();
-  //   } else {
-  //       EasyPermissions.requestPermissions(mContext, "This app needs access to your camera and mic to make video calls", RC_VIDEO_APP_PERM, perms);
-  //   }
-  // }
-
-  // @Override
-  // public void onPermissionsGranted(int requestCode, List<String> perms) {
-  //   Log.d(LOG_TAG, "onPermissionsGranted:" + requestCode + ":" + perms.size());
-  // }
-
-  // @Override
-  // public void onPermissionsDenied(int requestCode, List<String> perms) {
-  //   Log.d(LOG_TAG, "onPermissionsDenied:" + requestCode + ":" + perms.size());
-  //   if (EasyPermissions.somePermissionPermanentlyDenied(mContext, perms)) {
-  //     new AppSettingsDialog.Builder(mContext)
-  //       .setTitle(getString(R.string.title_settings_dialog))
-  //       .setRationale(getString(R.string.rationale_ask_again))
-  //       .setPositiveButton(getString(R.string.setting))
-  //       .setNegativeButton(getString(R.string.cancel))
-  //       .setRequestCode(RC_SETTINGS_SCREEN_PERM)
-  //       .build()
-  //       .show();
-  //   }
-  // }
-
-  private void initializeSession() {
+  private Future initializeSession() {
     mSession = new Session.Builder(mContext, _apiKey, _sessionId).build();
     mSession.setSessionListener(this);
-    mSession.connect(_token);
+
+    return executor.submit(()-> {
+      mSession.connect(_token);
+    });
+  }
+
+  private String subscribingStream(){
+    native2View.getView().addView(mSubscriber.getView());
+    mSession.subscribe(mSubscriber);
+    return "";
   }
 
   // SessionListener methods
@@ -211,7 +165,12 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
 
   @Override
   public void onStreamReceived(Session session, Stream stream) {
-    Log.i(LOG_TAG, "Stream Received");
+    Log.d(LOG_TAG, "onStreamReceived: New Stream Received " + stream.getStreamId() + " in session: " + session.getSessionId());
+
+    if (mSubscriber == null) {
+      mSubscriber = new Subscriber.Builder(mContext, stream).build();
+      //mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+    }
   }
 
   @Override

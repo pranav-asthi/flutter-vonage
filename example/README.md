@@ -1,6 +1,6 @@
-# flutter_vonage_video_example
+# test_vonage
 
-Demonstrates how to use the flutter_vonage_video plugin.
+A new Flutter project.
 
 ## Getting Started
 
