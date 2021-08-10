@@ -35,10 +35,10 @@ class _MyAppState extends State<MyApp> {
 
   Future<void> _startAll() async{
     await _initSession();
-    // await Future.delayed(Duration(seconds: 2));
-    // await _publishStream();
-    // await Future.delayed(Duration(seconds: 2));
-    // await _subscriberStream();
+    await Future.delayed(Duration(seconds: 2));
+    await _subscriberStream();
+    await Future.delayed(Duration(seconds: 2));
+    await _publishStream();
   }
 
   Future<void> _initSession() async {
@@ -157,63 +157,59 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    Widget _buttonPublish = SizedBox.shrink();
-    if (_sessionInited && !_isPublishing) {
-      _buttonPublish = ElevatedButton(
-        child: Text('Publish Stream'),
-        onPressed: _publishStream,
-      );
-    }
+    // Widget _buttonPublish = SizedBox.shrink();
+    // if (_sessionInited && !_isPublishing) {
+    //   _buttonPublish = ElevatedButton(
+    //     child: Text('Publish Stream'),
+    //     onPressed: _publishStream,
+    //   );
+    // }
 
-    Widget _buttonUnpublish = SizedBox.shrink();
-    if (_sessionInited && _isPublishing) {
-      _buttonUnpublish = ElevatedButton(
-        child: Text('Unpublish Stream'),
-        onPressed: _unpublishStream,
-      );
-    }
-    Widget _subscribingButton = SizedBox.shrink();
-    if (true) {
-      _subscribingButton = ElevatedButton(
-        child: Text('Subscriber Stream'),
-        onPressed: _subscriberStream,
-      );
-    }
-
+    // Widget _buttonUnpublish = SizedBox.shrink();
+    // if (_sessionInited && _isPublishing) {
+    //   _buttonUnpublish = ElevatedButton(
+    //     child: Text('Unpublish Stream'),
+    //     onPressed: _unpublishStream,
+    //   );
+    // }
+    // Widget _subscribingButton = SizedBox.shrink();
+    // if (true) {
+    //   _subscribingButton = ElevatedButton(
+    //     child: Text('Subscriber Stream'),
+    //     onPressed: _subscriberStream,
+    //   );
+    // }
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Vonage Video example app'),
-        ),
-        body: ListView(
-          children: <Widget> [
-            _buttonPublish,
-            _buttonUnpublish,
-            _subscribingButton,
-            Container(
-              width: 600,
-              height: 600,
-              child: Stack(
-                children: [
-                  Container(
-                    width: 600,
-                    height: 600,
-                    child: _buildSubscriber(context),
-                  ),
-                  Align(
-                    alignment: Alignment.topRight,
+      builder: (context,_){
+        var size = MediaQuery.of(context).size;
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Vonage Video example app'),
+          ),
+          body: Container(
+            width: size.width,
+            height: size.height,
+            child: Stack(
+              children: [
+                Align(
+                  alignment: Alignment.center,
+                  child: Center(
                     child: Container(
-                      height: 100,
-                      width: 100,
-                      child: _buildPublisher(context),
-                    ),
+                      child: _buildSubscriber(context)),
+                  )),
+                Align(
+                  alignment: Alignment.topRight,
+                  child: Container(
+                    height: 100,
+                    width: 100,
+                    child: _buildPublisher(context),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ]
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 }

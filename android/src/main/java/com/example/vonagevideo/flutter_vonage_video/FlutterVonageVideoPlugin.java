@@ -1,6 +1,7 @@
 package com.example.vonagevideo.flutter_vonage_video;
 
 import androidx.annotation.NonNull;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.plugin.common.MethodCall;
@@ -16,6 +17,7 @@ import io.flutter.plugin.common.BinaryMessenger;
 // import android.os.Build.VERSION;
 // import android.os.Build.VERSION_CODES;
 
+import com.opentok.android.BaseVideoRenderer;
 import com.opentok.android.Session;
 import com.opentok.android.Stream;
 import com.opentok.android.Publisher;
@@ -34,6 +36,9 @@ import java.util.concurrent.Future;
 // import pub.devrel.easypermissions.EasyPermissions;
 
 import android.content.Context;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 /** FlutterVonageVideoPlugin */
 public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandler,
@@ -50,6 +55,9 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
   private ExecutorService executor
           = Executors.newSingleThreadExecutor();
 
+  private FrameLayout publisherViewContainer;
+  private FrameLayout subscriberViewContainer;
+
   @Override
   public void onAttachedToEngine(@NonNull FlutterPluginBinding flutterPluginBinding) {
     channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_vonage_video");
@@ -63,6 +71,11 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
       .registerViewFactory("flutter-vonage-video-publisher", nativeView);
     flutterPluginBinding.getPlatformViewRegistry()
             .registerViewFactory("flutter-vonage-video-subscriber", native2View);
+    //final View v = View.inflate(mContext,R.layout.progress,null);
+    //native2View.getView().addView(v);
+    ConstraintLayout a = (ConstraintLayout) View.inflate(mContext,R.layout.vonage_view,null);
+    publisherViewContainer = a.findViewById(R.id.publisher_container);
+    subscriberViewContainer = a.findViewById(R.id.subscriber_container);
   }
 
   @Override
@@ -108,9 +121,8 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
     _apiKey = apiKey;
     System.out.println("Esperando");
     Future x = initializeSession();
-    while(x.isDone()){};
+    while(!x.isDone()){};
     System.out.println("Session realizada");
-    // requestPermissions();
     return "top";
   }
 
@@ -147,8 +159,13 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
   }
 
   private String subscribingStream(){
-    native2View.getView().addView(mSubscriber.getView());
-    mSession.subscribe(mSubscriber);
+    //native2View.getView().removeAllViews();
+    View v = View.inflate(mContext,R.layout.progress,null);
+    native2View.getView().addView(v);
+    if(mSubscriber != null && mSubscriber.getView() != null) {
+      native2View.getView().addView(mSubscriber.getView());
+      mSession.subscribe(mSubscriber);
+    }
     return "";
   }
 
@@ -166,16 +183,21 @@ public class FlutterVonageVideoPlugin implements FlutterPlugin, MethodCallHandle
   @Override
   public void onStreamReceived(Session session, Stream stream) {
     Log.d(LOG_TAG, "onStreamReceived: New Stream Received " + stream.getStreamId() + " in session: " + session.getSessionId());
-
-    if (mSubscriber == null) {
+    //native2View.getView().removeAllViews();
+    //if (stream != null) {
       mSubscriber = new Subscriber.Builder(mContext, stream).build();
-      //mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
-    }
+      mSubscriber.getRenderer().setStyle(BaseVideoRenderer.STYLE_VIDEO_SCALE, BaseVideoRenderer.STYLE_VIDEO_FILL);
+      native2View.getView().addView(mSubscriber.getView());
+    //} else {
+    //  native2View.getView().addView(View.inflate(mContext,R.layout.progress,null));
+    //}
   }
 
   @Override
   public void onStreamDropped(Session session, Stream stream) {
     Log.i(LOG_TAG, "Stream Dropped");
+    native2View.getView().removeAllViews();
+    native2View.getView().addView(View.inflate(mContext,R.layout.progress,null));
   }
 
   @Override

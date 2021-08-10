@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="CircularLoading">
+        <attr name="labelColor" format="color">#00AF66</attr>
+    </declare-styleable>
+</resources>
