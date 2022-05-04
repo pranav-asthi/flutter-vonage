@@ -1,11 +1,11 @@
 name: flutter_vonage_video
 description: Flutter Vonage Video (Tokbox / Opentok) API for publishing and subscribing to video and audio streams.
-version: 0.0.3
+version: 0.0.1
 homepage:
 repository: https://github.com/presencelearning/flutter-vonage-video
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
+  sdk: '>=2.12.0 <3.0.0'
   flutter: ">=1.20.0"
 
 dependencies:
@@ -14,7 +14,7 @@ dependencies:
   flutter_web_plugins:
     sdk: flutter
 
-  permission_handler: 6.1.1
+  permission_handler: ^9.2.0
 
 dev_dependencies:
   flutter_test:
@@ -36,9 +36,6 @@ flutter:
         pluginClass: FlutterVonageVideoPlugin
       ios:
         pluginClass: FlutterVonageVideoPlugin
-      web:
-        pluginClass: FlutterVonageVideoWeb
-        fileName: flutter_vonage_video_web.dart
 
   # To add assets to your plugin package, add an assets section, like this:
   # assets:

@@ -20,7 +20,7 @@ class _VideoBasicWidgetState extends State<VideoBasicWidget> {
   Future<void> _getBatteryLevel() async {
     String batteryLevel;
     try {
-      final int result = await methodChannel.invokeMethod('getBatteryLevel');
+      final int? result = await methodChannel.invokeMethod('getBatteryLevel');
       batteryLevel = 'Battery level: $result%.';
     } on PlatformException {
       batteryLevel = 'Failed to get battery level.';
