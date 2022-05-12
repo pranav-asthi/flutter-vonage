@@ -6,19 +6,23 @@ import OpenTok
 public class SwiftFlutterVonageVideoPlugin: NSObject, FlutterPlugin {
 	var nativeView: FlutterPlatformView?
 	var nativeViewFactory: FLNativeViewFactory?
+	var nativeViewFactory2: FLNativeViewFactory?
 	var session: OTSession?
-  var publisher: OTPublisher?
+    var publisher: OTPublisher?
+    var subscriber: OTSubscriber?
 
   public init(with registrar: FlutterPluginRegistrar) {
   	super.init()
   	let channel = FlutterMethodChannel(name: "flutter_vonage_video", binaryMessenger: registrar.messenger())
-    // let instance = SwiftFlutterVonageVideoPlugin()
     registrar.addMethodCallDelegate(self, channel: channel)
 
   	let factory = FLNativeViewFactory(messenger: registrar.messenger())
+  	let factory2 = FLNativeViewFactory(messenger: registrar.messenger())
     nativeViewFactory = factory
+    nativeViewFactory2 = factory2
     print ("init nativeView", nativeViewFactory)
     registrar.register(factory, withId: "flutter-vonage-video-publisher")
+    registrar.register(factory2, withId: "flutter-vonage-video-subscriber")
   }
 
   public static func register(with registrar: FlutterPluginRegistrar) {
@@ -70,7 +74,6 @@ public class SwiftFlutterVonageVideoPlugin: NSObject, FlutterPlugin {
 
   func publishStream(name: String, viewId: Int, result: FlutterResult) {
   	let settings = OTPublisherSettings()
-    // settings.name = UIDevice.current.name
     settings.name = name
     guard let publisher = OTPublisher(delegate: self, settings: settings) else {
       return
@@ -82,26 +85,14 @@ public class SwiftFlutterVonageVideoPlugin: NSObject, FlutterPlugin {
       print(error!)
       return
     }
-
-    // print ("publishStream", SwiftFlutterVonageVideoPlugin.nativeView)
-    // var view: UIView = SwiftFlutterVonageVideoPlugin.nativeView!.view()
     var view: UIView = nativeViewFactory!.getView()
     print ("publishStream", nativeViewFactory, view)
-    // print ("publishStream", viewId)
-    // var view: UIView = nativeView!.view()
 
     guard let publisherView = publisher.view else {
       return
     }
-
-    // let screenBounds = UIScreen.main.bounds
-    // publisherView.frame = CGRect(x: screenBounds.width - 150 - 20, y: screenBounds.height - 150 - 20, width: 150, height: 150)
-    publisherView.frame = view.bounds
-
+    publisherView.frame = view.frame
     view.addSubview(publisherView)
-    // view.backgroundColor = UIColor.red
-
-  	result("")
   }
 
   func unpublishStream(result: FlutterResult) {
@@ -116,11 +107,35 @@ public class SwiftFlutterVonageVideoPlugin: NSObject, FlutterPlugin {
 
   	result("")
   }
+
+  func subscribingStream() {
+
+  }
 }
 
 extension SwiftFlutterVonageVideoPlugin: OTSessionDelegate {
 	public func sessionDidConnect(_ session: OTSession) {
 		print("The client connected to the OpenTok session.")
+        let settings = OTPublisherSettings()
+            settings.name = UIDevice.current.name
+            guard let publisher = OTPublisher(delegate: self, settings: settings) else {
+              return
+            }
+
+            var error: OTError?
+            session.publish(publisher, error: &error)
+            guard error == nil else {
+              print(error!)
+              return
+            }
+            var view: UIView = nativeViewFactory!.getView()
+            print ("publishStream", nativeViewFactory, view)
+
+            guard let publisherView = publisher.view else {
+              return
+            }
+            publisherView.frame = view.frame
+            view.addSubview(publisherView)
 	}
 
 	public func sessionDidDisconnect(_ session: OTSession) {
@@ -133,6 +148,25 @@ extension SwiftFlutterVonageVideoPlugin: OTSessionDelegate {
 
 	public func session(_ session: OTSession, streamCreated stream: OTStream) {
 		print("A stream was created in the session.")
+		subscriber = OTSubscriber(stream: stream, delegate: self)
+        guard let subscriber = subscriber else {
+            return
+        }
+
+        var error: OTError?
+        session.subscribe(subscriber, error: &error)
+        guard error == nil else {
+            print(error!)
+            return
+        }
+
+        var view: UIView = nativeViewFactory2!.getView()
+
+        guard let subscriberView = subscriber.view else {
+            return
+        }
+        subscriberView.frame = view.frame
+        view.addSubview(subscriberView)
 	}
 
 	public func session(_ session: OTSession, streamDestroyed stream: OTStream) {
@@ -144,4 +178,14 @@ extension SwiftFlutterVonageVideoPlugin: OTPublisherDelegate {
 	public func publisher(_ publisher: OTPublisherKit, didFailWithError error: OTError) {
 		print("The publisher failed: \(error)")
 	}
+}
+
+extension SwiftFlutterVonageVideoPlugin: OTSubscriberDelegate {
+    public func subscriberDidConnect(toStream subscriber: OTSubscriberKit) {
+            print("The subscriber did connect to the stream.")
+        }
+
+        public func subscriber(_ subscriber: OTSubscriberKit, didFailWithError error: OTError) {
+            print("The subscriber failed to connect to the stream.")
+        }
 }
